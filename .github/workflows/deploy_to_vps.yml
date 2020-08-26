@@ -7,7 +7,6 @@ jobs:
     if: github.ref == 'refs/heads/master'
     runs-on: [ubuntu-latest]
     steps:
-      - uses: actions/checkout@v2.1.1
       - name: Enviar para servidor e Reiniciar Instância
         uses: appleboy/ssh-action@master
         with:
