@@ -113,6 +113,6 @@ if __name__ == '__main__':
     while not killer.kill_now:
         price_check()
         print("---")  # Separa os logs de cada execução.
-        time.sleep(randint(300, 1200))
+        time.sleep(randint(180, 1800))
 
     print("Parando execução.")
