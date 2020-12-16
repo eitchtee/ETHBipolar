@@ -6,7 +6,6 @@ def get_price():
 
     response = requests.request("get", url)
     json = response.json()
-    print(json)
     brl_valor = json['ethereum']['brl']
     usd_valor = json['ethereum']['usd']
     brl_24h = json['ethereum']['brl_24h_change']
