@@ -31,7 +31,11 @@ def checar_diferenca(ultimo_valor, valor_atual):
     valor_minimo = 30
     diferenca = round(abs(valor_atual - ultimo_valor), 2)
 
-    return diferenca > valor_minimo, diferenca, valor_atual > ultimo_valor
+    aumento = valor_atual - ultimo_valor
+    aumento_porcentagem = aumento / ultimo_valor
+    aumento_porcentagem = "{:+.2%}".format(aumento_porcentagem).replace('.', ',')
+
+    return diferenca > valor_minimo, diferenca, valor_atual > ultimo_valor, aumento_porcentagem
 
 
 def price_check():
@@ -52,10 +56,10 @@ def price_check():
             return
     else:
         try:
-            valor_atual_brl, valor_atual_usd = get_price()
+            valor_atual_brl, brl_24hr, valor_atual_usd, usd_24hr = get_price()
 
-            dif_check, dif_valor, subiu = checar_diferenca(ultimo_valor,
-                                                           valor_atual_brl)
+            dif_check, dif_valor, subiu, porcentagem = checar_diferenca(ultimo_valor,
+                                                                        valor_atual_brl)
 
             if dif_check:
                 valor_reais = Money(str(valor_atual_brl), Currency.BRL). \
@@ -67,9 +71,10 @@ def price_check():
 
                 if subiu:
                     msg = f"🟢 Ethereum subiu :)\n\n" \
-                          f"🇧🇷 {valor_reais}\n" \
+                          f"🇧🇷 {valor_reais} ({porcentagem})\n" \
                           f"🇺🇸 {valor_dolar}\n\n" \
-                          f"Em {dia} às {hora}."
+                          f"📊 24h: {brl_24hr}\n\n" \
+                          f"🗓️ Em {dia} às {hora}."
                     try:
                         twittar(msg)
                         print(f"🟢 Ethereum subiu. "
@@ -81,9 +86,10 @@ def price_check():
                         return
                 else:
                     msg = f"🔴 Ethereum caiu :(\n\n" \
-                          f"🇧🇷 {valor_reais}\n" \
+                          f"🇧🇷 {valor_reais} ({porcentagem})\n" \
                           f"🇺🇸 {valor_dolar}\n\n" \
-                          f"Em {dia} às {hora}."
+                          f"📊 24h: {brl_24hr}\n\n" \
+                          f"🗓️ Em {dia} às {hora}."
                     try:
                         twittar(msg)
                         print(f"🔴 Ethereum caiu. "
