@@ -34,14 +34,9 @@ def checar_diferenca(ultimo_valor, valor_atual):
     aumento = valor_atual - ultimo_valor
     aumento_porcentagem = aumento / ultimo_valor
 
-    if aumento_porcentagem >= 0:
-        porcentagem_status = "📈"
-    else:
-        porcentagem_status = "📉"
-
     aumento_porcentagem = "{:+.2%}".format(aumento_porcentagem).replace('.', ',')
 
-    return diferenca > valor_minimo, diferenca, valor_atual > ultimo_valor, aumento_porcentagem, porcentagem_status
+    return diferenca > valor_minimo, diferenca, valor_atual > ultimo_valor, aumento_porcentagem
 
 
 def price_check():
@@ -64,16 +59,24 @@ def price_check():
         try:
             valor_atual_brl, brl_24hr, valor_atual_usd, usd_24hr = get_price()
 
-            dif_check, dif_valor, subiu, porcentagem, porcentagem_status = checar_diferenca(ultimo_valor,
+            dif_check, dif_valor, subiu, porcentagem = checar_diferenca(ultimo_valor,
                                                                         valor_atual_brl)
 
             if dif_check:
+                if brl_24hr >= 0:
+                    porcentagem_status = "📈"
+                else:
+                    porcentagem_status = "📉"
+
                 valor_reais = Money(str(valor_atual_brl), Currency.BRL). \
                     format('pt_BR')
                 valor_dolar = Money(str(valor_atual_usd), Currency.USD). \
                     format('pt_BR')
                 hora = datetime.now().strftime('%H:%M')
                 dia = datetime.now().strftime('%d/%m/%Y')
+
+                brl_24hr = "{:+.2%}".format(brl_24hr / 100).replace('.', ',')
+                usd_24hr = "{:+.2%}".format(usd_24hr / 100).replace('.', ',')
 
                 if subiu:
                     msg = f"🟢 Ethereum subiu :)\n\n" \
