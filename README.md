@@ -1,5 +1,5 @@
 <div align="center">
-	<a href="https://twitter.com/btc_bipolar" target="_blank">
+	<a href="https://twitter.com/ETHBipolar" target="_blank">
     	<img alt="Banner ETHBipolar" title="ETHBipolar" src="./.github/images/header.png" />
     </a>
 </div>
