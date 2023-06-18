@@ -1,5 +1,5 @@
 # # coding=utf-8
-from config import CONSUMER_KEY, CONSUMER_SECRET, OAUTH_BEARER
+from config import CONSUMER_KEY, CONSUMER_SECRET
 import tweepy
 
 
