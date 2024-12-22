@@ -10,10 +10,10 @@ from random import randint
 from money.currency import Currency
 from money.money import Money
 
-from twitter import twittar
+from twitter import run_async_twittar, cleanup, start
 from api import get_price
 
-locale.setlocale(locale.LC_ALL, '')
+locale.setlocale(locale.LC_ALL, "")
 
 
 class GracefulKiller:
@@ -34,24 +34,28 @@ def checar_diferenca(ultimo_valor, valor_atual):
     aumento = valor_atual - ultimo_valor
     aumento_porcentagem = aumento / ultimo_valor
 
-    aumento_porcentagem = "{:+.2%}".format(aumento_porcentagem).replace('.', ',')
+    aumento_porcentagem = "{:+.2%}".format(aumento_porcentagem).replace(".", ",")
 
-    return diferenca > valor_minimo, diferenca, valor_atual > ultimo_valor, aumento_porcentagem
+    return (
+        diferenca > valor_minimo,
+        diferenca,
+        valor_atual > ultimo_valor,
+        aumento_porcentagem,
+    )
 
 
 def price_check():
     # Carrega o último valor verificado de uma db ou cria a database e
     # aguarda a próxima execução
     try:
-        with open(valor_db_path, 'rb') as db:
+        with open(valor_db_path, "rb") as db:
             ultimo_valor = pickle.load(db)
     except FileNotFoundError:
-        print('Rodando pela primeira vez.')
+        print("Rodando pela primeira vez.")
         try:
             valor_atual_brl = get_price()[0]
-            with open(valor_db_path, 'wb') as db:
-                pickle.dump(valor_atual_brl, db,
-                            protocol=pickle.HIGHEST_PROTOCOL)
+            with open(valor_db_path, "wb") as db:
+                pickle.dump(valor_atual_brl, db, protocol=pickle.HIGHEST_PROTOCOL)
         except:
             traceback.print_exc()
             return
@@ -59,8 +63,9 @@ def price_check():
         try:
             valor_atual_brl, brl_24hr, valor_atual_usd, usd_24hr = get_price()
 
-            dif_check, dif_valor, subiu, porcentagem = checar_diferenca(ultimo_valor,
-                                                                        valor_atual_brl)
+            dif_check, dif_valor, subiu, porcentagem = checar_diferenca(
+                ultimo_valor, valor_atual_brl
+            )
 
             if dif_check:
                 if brl_24hr >= 0:
@@ -68,66 +73,77 @@ def price_check():
                 else:
                     porcentagem_status = "📉"
 
-                valor_reais = Money(str(valor_atual_brl), Currency.BRL). \
-                    format('pt_BR')
-                valor_dolar = Money(str(valor_atual_usd), Currency.USD). \
-                    format('pt_BR')
-                hora = datetime.now().strftime('%H:%M')
-                dia = datetime.now().strftime('%d/%m/%Y')
+                valor_reais = Money(str(valor_atual_brl), Currency.BRL).format("pt_BR")
+                valor_dolar = Money(str(valor_atual_usd), Currency.USD).format("pt_BR")
+                hora = datetime.now().strftime("%H:%M")
+                dia = datetime.now().strftime("%d/%m/%Y")
 
-                brl_24hr = "{:+.2%}".format(brl_24hr / 100).replace('.', ',')
-                usd_24hr = "{:+.2%}".format(usd_24hr / 100).replace('.', ',')
+                brl_24hr = "{:+.2%}".format(brl_24hr / 100).replace(".", ",")
+                usd_24hr = "{:+.2%}".format(usd_24hr / 100).replace(".", ",")
 
                 if subiu:
-                    msg = f"🟢 Ethereum subiu :)\n\n" \
-                          f"🇧🇷 {valor_reais} ({porcentagem})\n" \
-                          f"🇺🇸 {valor_dolar}\n\n" \
-                          f"{porcentagem_status} 24h: {brl_24hr}\n\n" \
-                          f"🗓️ Em {dia} às {hora}."
+                    msg = (
+                        f"🟢 Ethereum subiu :)\n\n"
+                        f"🇧🇷 {valor_reais} ({porcentagem})\n"
+                        f"🇺🇸 {valor_dolar}\n\n"
+                        f"{porcentagem_status} 24h: {brl_24hr}\n\n"
+                        f"🗓️ Em {dia} às {hora}."
+                    )
                     try:
-                        twittar(msg)
-                        print(f"🟢 Ethereum subiu. "
-                              f'Último valor: {ultimo_valor} | '
-                              f'Valor atual: {valor_atual_brl} | '
-                              f'Diferença: {dif_valor}')
+                        run_async_twittar(msg)
+                        print(
+                            f"🟢 Ethereum subiu. "
+                            f"Último valor: {ultimo_valor} | "
+                            f"Valor atual: {valor_atual_brl} | "
+                            f"Diferença: {dif_valor}"
+                        )
                     except:
                         traceback.print_exc()
                         return
                 else:
-                    msg = f"🔴 Ethereum caiu :(\n\n" \
-                          f"🇧🇷 {valor_reais} ({porcentagem})\n" \
-                          f"🇺🇸 {valor_dolar}\n\n" \
-                          f"{porcentagem_status} 24h: {brl_24hr}\n\n" \
-                          f"🗓️ Em {dia} às {hora}."
+                    msg = (
+                        f"🔴 Ethereum caiu :(\n\n"
+                        f"🇧🇷 {valor_reais} ({porcentagem})\n"
+                        f"🇺🇸 {valor_dolar}\n\n"
+                        f"{porcentagem_status} 24h: {brl_24hr}\n\n"
+                        f"🗓️ Em {dia} às {hora}."
+                    )
                     try:
-                        twittar(msg)
-                        print(f"🔴 Ethereum caiu. "
-                              f'Último valor: {ultimo_valor} | '
-                              f'Valor atual: {valor_atual_brl} | '
-                              f'Diferença: {dif_valor}')
+                        run_async_twittar(msg)
+                        print(
+                            f"🔴 Ethereum caiu. "
+                            f"Último valor: {ultimo_valor} | "
+                            f"Valor atual: {valor_atual_brl} | "
+                            f"Diferença: {dif_valor}"
+                        )
                     except:
                         traceback.print_exc()
                         return
-                with open(valor_db_path, 'wb') as db:
-                    pickle.dump(valor_atual_brl, db,
-                                protocol=pickle.HIGHEST_PROTOCOL)
+                with open(valor_db_path, "wb") as db:
+                    pickle.dump(valor_atual_brl, db, protocol=pickle.HIGHEST_PROTOCOL)
             else:
-                print(f'Diferença insignificante para ser postada. Último '
-                      f'valor: {ultimo_valor} | Valor a'
-                      f'tual: {valor_atual_brl} | Diferença: {dif_valor}')
+                print(
+                    f"Diferença insignificante para ser postada. Último "
+                    f"valor: {ultimo_valor} | Valor a"
+                    f"tual: {valor_atual_brl} | Diferença: {dif_valor}"
+                )
         except:
             traceback.print_exc()
             return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     work_dir = os.path.dirname(os.path.realpath(__file__))
-    valor_db_path = os.path.normpath(f'{work_dir}/ultimo_valor.db')
+    valor_db_path = os.path.normpath(f"{work_dir}/ultimo_valor.db")
+
+    start()
 
     killer = GracefulKiller()
     while not killer.kill_now:
         price_check()
         print("---")  # Separa os logs de cada execução.
         time.sleep(randint(600, 3600))
+
+    cleanup()
 
     print("Parando execução.")
